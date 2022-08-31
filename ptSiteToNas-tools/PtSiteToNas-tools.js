@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         PtSiteToNas-tools
 // @namespace    http://tampermonkey.net/
-// @version      1.0
-// @description  try to take over the world!
+// @version      1.1.0
+// @description  站点cookie发送到nastools站点管理
 // @author       Kind
 
 // @match   http://hdhome.org/index.php
@@ -39,31 +39,15 @@
 // @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @grant        GM_xmlhttpRequest
 // ==/UserScript==
-let nanstoolurl = "http://ip:300"; // 请设置nas-tools的访问地址，如http://192.168.1.2:300
+let nanstoolurl = "http://192.168.1.204:3000"; // 请设置nas-tools的访问地址，如http://192.168.1.2:300
 var siteJson;
 
 (function () {
     'use strict';
-    GM_xmlhttpRequest({
-        method: "POST",
-        url: nanstoolurl + "/site",
-        headers: {
-            'Origin': nanstoolurl,
-        },
-        onload: function (response) {
-                console.log("nas-tools 请求站点信息成功");
-                // console.log(response.responseText);
-                siteJson = infoToJson(response.responseText);
-                // console.log("【Debug】siteJson:"+ siteJson);
-                sendSiteToNastools();
-            },
-            onerror: function (response) {
-                console.log("nastools 请求失败");
-            }
-    });
+    main();
 })();
 
-function sendSiteToNastools() {
+async function main() {
     console.log("【Debug】开始获取PT站点信息");
     var ptCookie = document.cookie;
     console.log('【Debug】cookie', document.cookie);
@@ -74,30 +58,67 @@ function sendSiteToNastools() {
     var ptUrl = document.URL;
     var nasToolUpdateUrl = nanstoolurl + "/do?random=0.9810414943440304";
     let data = {};
+    siteJson = await getSiteJson(); // {name:site_id}
+    data.site_signurl = ptUrl;
+    data.site_cookie = ptCookie;
     if (ptTitle in siteJson) {
-        console.log("【Debug】",ptTitle + "的site_id:", siteJson[ptTitle]);
+        console.log("【Debug】", ptTitle + " 站点已存在，site_id:", siteJson[ptTitle]);
+        var info = await getSiteinfo(siteJson[ptTitle]); // 获取更详细的site信息
+        console.log("【Debug】info:");
+        console.log(info);
         data.site_id = siteJson[ptTitle];
+        data.site_pri = info.pri;
+        data.site_rssurl = info.rssurl;
+        if (info.parse + "|" + info.rule) {
+            data.site_note = info.parse + "|" + info.rule;
+        } else {
+            data.site_note = "Y|1000"
+        }
     } else {
         console.log("【Debug】新站点:" + ptTitle);
         data.site_id = "";
+        data.site_pri = "";
+        data.site_rssurl = "";
     }
-    data.site_name = ptTitle;
-    data.site_pri = 1;
-    data.site_rssurl = "";
-    data.site_signurl = ptUrl;
-    data.site_note = "Y|1000"
-    data.site_cookie = ptCookie;
+    await sendSiteToNastools(data);
+}
+
+async function getSiteJson(data) {
+    data = "cmd=update_site&data=" + encodeURI(JSON.stringify(data));
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            method: "POST",
+            url: nanstoolurl + "/site",
+            headers: {
+                'Origin': nanstoolurl,
+            },
+            data:data,
+            onload: function (response) {
+                    console.log("nas-tools 请求站点信息成功");
+                    // console.log(response.responseText);
+                    siteJson = infoToJson(response.responseText);
+                   // console.log("【Debug】siteJson:"+ siteJson);
+                    resolve(siteJson);
+                },
+                onerror: function (response) {
+                    console.log("nastools 请求失败");
+                }
+        });
+    })
+}
+
+async function sendSiteToNastools(data) {
     data = "cmd=update_site&data=" + encodeURI(JSON.stringify(data));
     GM_xmlhttpRequest({
         method: "POST",
-        url: nasToolUpdateUrl,
+        url: nanstoolurl + "/do?random=0.5949206085889633",
         headers: {
             'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'Origin': nanstoolurl
         },
         data: data,
         onload: function (response) {
-                console.log("【Debug】nas-tools请求成功,成功添加站点" + ptTitle); // code : true 为请求成功，参数不对返回非法请求
+                console.log("【Debug】nas-tools请求成功,成功添加站点"); // code : true 为请求成功，参数不对返回非法请求
                 // console.log(response.responseText);
             },
             onerror: function (response) {
@@ -121,4 +142,30 @@ function infoToJson(text) {
     }
     console.log("【Debug】nas-tools站点信息转换为json", json);
     return json;
+}
+
+async function getSiteinfo(site_id) {
+    var data = {
+        "id": site_id
+    }
+    return new Promise((resolve, reject) => {
+        GM_xmlhttpRequest({
+            method: "POST",
+            url: nanstoolurl + "/do?random=0.5949206085889633",
+            headers: {
+                'Origin': nanstoolurl,
+                'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            },
+            data: "cmd=get_site&data=" + encodeURI(JSON.stringify(data)),
+            onload: function (response) {
+                    console.log("nas-tools请求成功");
+                    // console.log(response.responseText);
+                    var info = JSON.parse(response.responseText);
+                    resolve(info.site)
+                },
+                onerror: function (response) {
+                    console.log("请求失败");
+                }
+        })
+    })
 }
