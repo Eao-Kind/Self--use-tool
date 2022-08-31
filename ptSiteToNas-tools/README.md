@@ -8,7 +8,7 @@
 
 **油猴添加自定义脚本**
 
-https://github.com/Eao-Kind/Self--use-tool/blob/main/PtSiteToNas-tools.js
+https://github.com/Eao-Kind/Self--use-tool/blob/main/ptSiteToNas-tools/PtSiteToNas-tools.js
 
 ![image-20220831111228976](README.assets/image-20220831111228976.png)
 
