@@ -1,8 +1,8 @@
 // ==UserScript==
 // @name         PtSiteToNas-tools
 // @namespace    http://tampermonkey.net/
-// @version      1.1.2
-// @description  站点cookie发送到nastools站点管理
+// @version      1.1.3
+// @description  站点cookie发送到nastools站点管理。
 // @author       Kind
 
 // @match   http://hdhome.org/index.php
@@ -35,10 +35,10 @@
 // @match   https://www.tjupt.org/index.php
 // @match   https://www.torrentleech.org/index.php
 
-
-// @icon         data:image/gif;base64,R0lGODlhAQABAAAAACH5BAEKAAEALAAAAAABAAEAAAICTAEAOw==
 // @grant        GM_xmlhttpRequest
+// @grant       GM_cookie
 // ==/UserScript==
+// 可以删除所有的match，仅保留一个 @match https://*/index.php 但使用完毕后记得关闭脚本
 let nanstoolurl = "http://192.168.1.204:300"; // 请设置nas-tools的访问地址，如http://192.168.1.2:300
 var siteJson;
 var dorandom = "/do?random=0.19956351081249935";
@@ -49,8 +49,14 @@ var dorandom = "/do?random=0.19956351081249935";
 
 async function main() {
     console.log("【Debug】开始获取PT站点信息");
-    var ptCookie = document.cookie;
-    console.log('【Debug】cookie', document.cookie);
+    var ptCookie = "";
+    GM_cookie('list', {
+        url: location.href
+    }, (cookies) => {
+        ptCookie = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+        console.log('【Debug】cookie:',ptCookie);
+    });
+    // var ptCookie = document.cookie;
     var ptTitle = (document.title + "").split('::')[0];
     const pattern = /[`~!@#$^\-&*()=|{}':;'\\\[\]\.<>\/?~！@#￥……&*（）——|{}【】'；：""'。，、？\s]/g; // 去除( "等
     ptTitle = ptTitle.replace(pattern, "")
