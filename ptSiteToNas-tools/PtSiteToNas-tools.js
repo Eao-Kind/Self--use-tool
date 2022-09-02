@@ -1,11 +1,12 @@
 // ==UserScript==
 // @name         PtSiteToNas-tools
 // @namespace    http://tampermonkey.net/
-// @version      1.1.4
+// @version      1.1.5
 // @description  站点cookie发送到nastools站点管理。
 // @author       Kind
 
 // @match   https://hdhome.org/index.php
+// @match   https://pt.btschool.club/index.php
 // @match   https://byr.pt/index.php
 // @match   https://discfan.net/index.php
 // @match   https://et8.org/index.php
