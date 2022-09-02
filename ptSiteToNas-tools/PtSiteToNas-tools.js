@@ -5,40 +5,12 @@
 // @description  站点cookie发送到nastools站点管理。
 // @author       Kind
 
-// @match   https://hdhome.org/index.php
-// @match   https://pt.btschool.club/index.php
-// @match   https://byr.pt/index.php
-// @match   https://discfan.net/index.php
-// @match   https://et8.org/index.php
-// @match   https://filelist.io/index.php
-// @match   https://hdchina.org/index.php
-// @match   https://hdcity.leniter.org/index.php
-// @match   https://hdsky.me/index.php
-// @match   https://hudbt.hust.edu.cn/index.php
-// @match   https://iptorrents.com/t
-// @match   https://kp.m-team.cc/index.php
-// @match   https://lemonhd.org/index.php
-// @match   https://nanyangpt.com/index.php
-// @match   https://npupt.com/index.php
-// @match   https://ourbits.club/index.php
-// @match   https://pt.eastgame.org/index.php
-// @match   https://pt.hdbd.us/index.php
-// @match   https://pt.keepfrds.com/index.php
-// @match   https://pterclub.com/index.php
-// @match   https://springsunday.net/index.php
-// @match   https://u2.dmhy.org/index.php
-// @match   https://www.beitai.pt/index.php
-// @match   https://www.hdarea.co/index.php
-// @match   https://www.hddolby.com/index.php
-// @match   https://www.nicept.net/index.php
-// @match   https://www.pthome.net/index.php
-// @match   https://www.tjupt.org/index.php
-// @match   https://www.torrentleech.org/index.php
+// @match   https://自行添加/index.php
 
 // @grant       GM_xmlhttpRequest
 // @grant       GM_cookie
 // ==/UserScript==
-// 可以删除所有的match，仅保留一个 @match https://*/index.php 但使用完毕后记得关闭脚本。默认新加站点优先级为2
+// 安全问题match不在脚本内提供请自行获取 或可使用@match https://*/index.php 但使用完毕后记得关闭脚本。默认新加站点优先级为2
 
 // 设置nas-tools的访问地址，如http://192.168.1.2:300
 let nastoolurl = "http://192.168.1.204:300";
