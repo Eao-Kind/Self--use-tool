@@ -6,7 +6,6 @@
 // @author       Kind
 
 // @match   https://hdhome.org/index.php
-// @match   https://pt.btschool.club/index.php
 // @match   https://byr.pt/index.php
 // @match   https://discfan.net/index.php
 // @match   https://et8.org/index.php
@@ -44,8 +43,8 @@
 let nastoolurl = "http://192.168.1.204:300";
 // 获取nas-tools的安全密钥，基础设置-安全-API密钥
 var token = "L4eYq9tfPZ3CsEaM";
-// 如果是油猴插件测试版本，请填写BETA,否则置空
-var tampermonkeyVersion = "BETA"; //
+// 如果油猴插件是测试版，请填写BETA,否则置空或改成其他任意字符
+var tampermonkeyVersion = "BETA";
 // 下面这些不用修改
 var siteJson;
 var dorandom = "/do?random=0.19956351081249935";
@@ -103,10 +102,14 @@ async function sendSiteToNastools(data) {
 async function getData() {
     console.log("【Debug】开始获取PT站点信息");
     var data = {};
+    var ptUrl = document.URL;
+    if (ptUrl.length > 50){
+        console.log("【Debug】btschool盾");
+        return false;
+    }
     var ptTitle = (document.title + "").split('::')[0];
     const pattern = /[`~!@#$^\-&*()=|{}':;'\\\[\]\.<>\/?~！@#￥……&*（）——|{}【】'；：""'。，、？\s]/g; // 去除( "等
     ptTitle = ptTitle.replace(pattern, "").substr(0,15);
-    var ptUrl = document.URL;
     var ptCookie = document.cookie;
     if (tampermonkeyVersion == "BETA") {
         GM_cookie('list', {
