@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PtSiteToNas-tools
 // @namespace    http://tampermonkey.net/
-// @version      1.1.5
+// @version      1.1.6
 // @description  站点cookie发送到nastools站点管理。
 // @author       Kind
 
@@ -10,14 +10,13 @@
 // @grant       GM_xmlhttpRequest
 // @grant       GM_cookie
 // ==/UserScript==
-// 安全问题match不在脚本内提供请自行获取 或可使用@match https://*/index.php 但使用完毕后记得关闭脚本。默认新加站点优先级为2
-
+// 由于安全问题match不在脚本内提供请自行获取。
 // 设置nas-tools的访问地址，如http://192.168.1.2:300
 let nastoolurl = "http://192.168.1.204:300";
 // 获取nas-tools的安全密钥，基础设置-安全-API密钥
 var token = "L4eYq9tfPZ3CsEaM";
-// 如果油猴插件是测试版，请填写BETA,否则置空或改成其他任意字符
-var tampermonkeyVersion = "BETA";
+// 如果油猴插件是测试版(可获取更多cookie)，请填写BETA,否则置空或改成其他任意字符
+var tampermonkeyVersion = "BET_";
 // 下面这些不用修改
 var siteJson;
 var dorandom = "/do?random=0.19956351081249935";
@@ -92,8 +91,7 @@ async function getData() {
             console.log('【Debug】cookie:', ptCookie);
         });
     }
-
-        // 默认配置
+    // 默认配置
     data.site_id = "";
     data.site_name = ptTitle;
     data.site_pri = 2;
