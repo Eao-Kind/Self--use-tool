@@ -1,7 +1,7 @@
 // ==UserScript==
 // @name         PtSiteToNas-tools
 // @namespace    http://tampermonkey.net/
-// @version      1.1.7
+// @version      1.1.9
 // @description  站点cookie发送到nastools站点管理。
 // @author       Kind
 
@@ -107,10 +107,11 @@ async function getData() {
     data.site_cookie = ptCookie;
     data.site_note = my_site_note;
     var user_sites = await getUserSitesByApi();
+    var host_url = ptUrl.substring(8,).replace("/index.php",""); // 解决因index.php不是签到url而导致nas-tools签到失败
     for (var i = 0, l = user_sites.length; i < l; i++) {
-        if (user_sites[i].signurl == ptUrl) {
+        if (user_sites[i].signurl.search(host_url)!==-1) {
             var temp = user_sites[i]
-            console.log("【Debug】查询到nas-tools中该站点的信息");
+            console.log("【Debug】查询到nas-tools中该站点的信息:",temp.name);
             if(temp.cookie == ptCookie){
                 console.log("【Debug】cookie未过期，退出脚本");
                 return false;
