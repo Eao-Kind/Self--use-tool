@@ -26,8 +26,8 @@ let nastoolurl = "http://192.168.1.204:300";
 var token = "L4eYq9tfPZ3CsEaM";
 // 如果油猴插件是测试版(可获取更多cookie)，请填写BETA
 var tampermonkeyVersion = "B___";
-// 自定义配置：解析rss，日常观影，不通知，每日签到，ua可以删除从而使用内置
-var my_site_note = "Y|1000|N|Y|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/535.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/535.36";
+// 自定义配置：解析rss，日常观影，不通知，ua可以删除从而使用内置
+var my_site_note = "Y|1000|N|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/535.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/535.36";
 // 自定义配置：默认优先级为"2"
 var my_site_pri = "2"
 // 自定义配置：签到Q、订阅D、刷流S，默认不刷流、统计T
