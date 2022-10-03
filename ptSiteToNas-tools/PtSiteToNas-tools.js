@@ -125,7 +125,7 @@ async function getData() {
     data.site_include = my_site_include;
     data.site_note = my_site_note;
     var user_sites = await getUserSitesByApi();
-	if (user_sites == ""){ return false }
+    if (user_sites == ""){ return data }
     var host_url = ptUrl.substring(8,).replace("/index.php",""); // 解决因index不是签到url导致nas-tools签到失败
     for (var i = 0, l = user_sites.length; i < l; i++) {
         if (user_sites[i].signurl.search(host_url)!==-1) {
