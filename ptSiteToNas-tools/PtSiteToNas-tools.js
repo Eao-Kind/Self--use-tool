@@ -5,10 +5,10 @@
 // @namespace    https://greasyfork.org/zh-CN/scripts/450509-ptsitetonas-tools
 
 
-// @match   https://xxxx.com/index.php
+// @match   https://xxxx/index.php
 
 // @icon         https://kp.m-team.cc//favicon.ico
-// @version      1.2.1
+// @version      2.1.2
 // @grant       GM_xmlhttpRequest
 // @grant       GM_cookie
 // @license      GPL-3.0 License
@@ -16,6 +16,7 @@
 
 /*
 日志：
+    20220924：适配nas-tools 2.1.2版本。修复一些Bug
     20220924：适配nas-tools 2.1.0版本。
     20220914：适配nas-tools 2.0.5版本。
 */
@@ -23,10 +24,10 @@
 // 设置nas-tools的访问地址，如http://192.168.1.2:300
 let nastoolurl = "http://192.168.1.204:300";
 // 获取nas-tools的安全密钥，基础设置-安全-API密钥
-var token = "L4eYq9tfPZ3CsEaM";
-// 如果油猴插件是测试版(可获取更多cookie)，请填写BETA
+var token = "L4eYq9tfPZ3Cxxxx";
+// 如果油猴插件是测试版(可获取更多cookie)，请填写BETA，否则默认即可
 var tampermonkeyVersion = "B___";
-// 自定义配置：解析rss，日常观影，不通知，ua可以删除从而使用内置
+// 自定义配置：解析rss，日常观影，不通知，每日签到，ua也可以删除从而使用内置
 var my_site_note = "Y|1000|N|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/535.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/535.36";
 // 自定义配置：默认优先级为"2"
 var my_site_pri = "2"
@@ -53,13 +54,15 @@ async function getUserSitesByApi(){
                 "Authorization":token,
             },
             onload: function (response) {
-					var data = JSON.parse(response.responseText);
-                    console.log("【Debug】nas-tools请求userSite成功,status:",data.code);
-                    // console.log(response.responseText);
-                    resolve(data.data.user_sites)
+		var data = JSON.parse(response.responseText);
+                console.log("【Debug】nas-tools请求userSite成功,status:",data.code);
+                // console.log(response.responseText);
+                if(data.code==400){
+		    console.log("【Debug】获取userSite失败，请检查密钥是否正确");}
+		    resolve(data.data.user_sites)
                 },
                 onerror: function (response) {
-                    console.log("【Debug】nas-tools请求userSite失败");
+                    console.log("【Debug】nas-tools请求userSite失败，请检查IP地址是否设置正确");
                     reject("");
                 }
         })
@@ -67,7 +70,7 @@ async function getUserSitesByApi(){
 }
 
 async function sendSiteToNastools(data) {
-    data = "cmd=update_site&data=" + encodeURIComponent(JSON.stringify(data)); // JSON.stringify 时候遇到rssurl中的&会自动分割
+    data = "cmd=update_site&data=" + encodeURIComponent(JSON.stringify(data)); // JSON.stringify 时候遇到rssurl中的&会自动分割，不能用encode
     console.log(data)
     GM_xmlhttpRequest({
         method: "POST",
@@ -80,7 +83,7 @@ async function sendSiteToNastools(data) {
         data: data,
         onload: function (response) {
                 console.log("【Debug】nas-tools请求发送成功");
-                if (JSON.parse(response.responseText).code == "true"){ // code : true 为请求成功
+                if (JSON.parse(response.responseText).code !== true){ // code : true 为请求成功
                     console.log("【Debug】添加站点失败，可能由于nas-tools更新导致参数不对");
                 }
             },
@@ -94,27 +97,28 @@ async function sendSiteToNastools(data) {
 async function getData() {
     console.log("【Debug】开始获取PT站点信息");
     var data = {};
+    var ptCookie = document.cookie;
+    if (tampermonkeyVersion == "BETA") {
+        GM_cookie('list', {  // 异步,如果在return data之前还没执行完，部分站点会导致cookie不全。
+            url: location.href
+        }, (cookies) => {
+            ptCookie = cookies.map(c => `${c.name}=${c.value}`).join('; ');
+            console.log('【Debug】cookie:', ptCookie);
+            data.site_cookie = ptCookie;
+        });
+    }
     var ptUrl = document.URL;
     if (ptUrl.length > 50){
-        console.log("【Debug】可能是cf盾");
+        console.log("【Debug】可能是cf盾，进入首页后再刷新一下页面");
         return false;
     }
     var ptTitle = (document.title + "").split('::')[0];
     const pattern = /[`~!@#$^\-&*()=|{}':;'\\\[\]\.<>\/?~！@#￥……&*（）——|{}【】'；：""'。，、？\s]/g; // 去除( "等
     ptTitle = ptTitle.replace(pattern, "").substr(0,15);
-    var ptCookie = document.cookie;
-    if (tampermonkeyVersion == "BETA") {
-        GM_cookie('list', {
-            url: location.href
-        }, (cookies) => {
-            ptCookie = cookies.map(c => `${c.name}=${c.value}`).join('; ');
-            console.log('【Debug】cookie:', ptCookie);
-        });
-    }
-    if (ptCookie == ""){
-        console.log("【Debug】获取的cookie为空，退出脚本");
+    if (ptCookie == "" && tampermonkeyVersion!="BETA"){
+        console.log("【Debug】获取的cookie为空，请使用BETA版油猴，退出脚本");
         return false
-	}
+    }
     // 默认配置
     data.site_id = "";
     data.site_name = ptTitle;
@@ -125,7 +129,7 @@ async function getData() {
     data.site_include = my_site_include;
     data.site_note = my_site_note;
     var user_sites = await getUserSitesByApi();
-    if (user_sites == ""){ return data }
+    if (user_sites == ""){ return data } 			 // 第一次使用，一个站点都没有
     var host_url = ptUrl.substring(8,).replace("/index.php",""); // 解决因index不是签到url导致nas-tools签到失败
     for (var i = 0, l = user_sites.length; i < l; i++) {
         if (user_sites[i].signurl.search(host_url)!==-1) {
@@ -142,9 +146,9 @@ async function getData() {
             data.site_signurl = temp.signurl;
             data.site_cookie = ptCookie;
             data.site_include = ""
-            if(temp.signin_enable == true){data.site_include += "Q";} // 签到
-            if(temp.rss_enable == true){data.site_include += "D";} // rss
-            if(temp.brush_enable == true){data.site_include += "S";} // 刷流
+            if(temp.signin_enable == true){data.site_include += "Q";} 	 // 签到
+            if(temp.rss_enable == true){data.site_include += "D";} 	 // rss
+            if(temp.brush_enable == true){data.site_include += "S";} 	 // 刷流
             if(temp.statistic_enable == true){data.site_include += "T";} // 统计
             data.site_note = temp.parse + '|' + temp.rule + '|' + temp.unread_msg_notify + '|' + temp.ua;
             break;
