@@ -2,12 +2,10 @@
 // @name         PtSiteToNas-tools
 // @author       Kind
 // @description  PT站点cookie发送到nastools站点管理
-// @namespace    https://greasyfork.org/zh-CN/scripts/450509-ptsitetonas-tools
-
+// @namespace    http://tampermonkey.net/
 
 // @match   https://xxx/index.php
-
-// @version      2.3.0
+// @version      2.5.0
 // @grant       GM_xmlhttpRequest
 // @grant       GM_cookie
 // @license      GPL-3.0 License
@@ -15,6 +13,7 @@
 
 /*
 日志：
+    20221124：适配nas-tools 2.5.0版本。
     20221029：适配nas-tools 2.3.0版本。
     20220924：适配nas-tools 2.1.2版本。修复一些Bug
     20220924：适配nas-tools 2.1.0版本。
@@ -24,14 +23,15 @@
 // 设置nas-tools的访问地址，如http://192.168.1.2:300
 let nastoolurl = "http://192.168.1.204:300";
 // 获取nas-tools的安全密钥，基础设置-安全-API密钥
-var token = "L4eYq9tfPZ3CxxxM";
+var token = "IMCIrXB69GQUlxxxxx";
 // 如果油猴插件是测试版(可获取更多cookie)，请填写BETA，否则默认即可
 var tampermonkeyVersion = "BE__";
 // 自定义配置：解析rss，日常观影，不通知，ua（可用自己的或置空）,Y 浏览器仿真，N 不用代理服务器
-var my_site_note = "Y|1000|N|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/535.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/535.36;|Y|N";
+// var my_site_note = "Y|1000|N|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/535.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/535.36;|Y|N";
+var my_site_note = {"rule":"1000","parse":"N","ua":"","chrome":"Y","proxy":"N","message":"Y","subtitle":"Y"};
 // 自定义配置：默认优先级为"2"
 var my_site_pri = "2"
-// 自定义配置：签到Q、订阅D、刷流S，默认不刷流、统计T
+// 自定义配置：签到Q、订阅D(未设置rss链接时无法订阅)、刷流S，默认不刷流、统计T
 var my_site_include = "QDT"
 // 下面这些不用修改
 var userSitesApi = "/api/v1/site/sites"
@@ -98,8 +98,8 @@ async function getData() {
     console.log("【Debug】开始获取PT站点信息");
     var data = {};
     var ptCookie = document.cookie;
-    if (tampermonkeyVersion == "BETA") {
-        GM_cookie('list', { // 异步,如果在return data之前还没执行完，部分站点会导致cookie不全。
+    if (tampermonkeyVersion == "BETA") { 
+        GM_cookie('list', { // 异步,如果在return data之前还没执行完，部分站点会导致cookie不全。导致第一次加入站点时可能会缺
             url: location.href
         }, (cookies) => {
             ptCookie = cookies.map(c => `${c.name}=${c.value}`).join('; ');
@@ -150,7 +150,15 @@ async function getData() {
             if(temp.rss_enable == true){data.site_include += "D";} 	 // rss
             if(temp.brush_enable == true){data.site_include += "S";} 	 // 刷流
             if(temp.statistic_enable == true){data.site_include += "T";} // 统计
-            data.site_note = temp.parse + '|' + temp.rule + '|' + temp.unread_msg_notify + '|' + temp.ua + '|' + temp.chrome + '|' + temp.proxy;
+            // data.site_note = temp.parse + '|' + temp.rule + '|' + temp.unread_msg_notify + '|' + temp.ua + '|' + temp.chrome + '|' + temp.proxy; 2.5.0废弃
+            data.site_note = {};
+            data.site_note.rule = temp.rule;
+            data.site_note.parse = temp.parse;
+            data.site_note.ua = temp.ua;
+            data.site_note.chrome = temp.chrome;
+            data.site_note.proxy = temp.proxy;
+            data.site_note.message = temp.unread_msg_notify;
+            data.site_note.subtitle = temp.subtitle.
             break;
         }
     }
