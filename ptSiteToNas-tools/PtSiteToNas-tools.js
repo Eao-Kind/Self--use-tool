@@ -4,15 +4,17 @@
 // @description  PT站点cookie发送到nastools站点管理
 // @namespace    http://tampermonkey.net/
 
-// @match   https://xxx/index.php
-// @version      2.5.0
+// @version      2.8.0
 // @grant       GM_xmlhttpRequest
 // @grant       GM_cookie
+// @grant       GM_setValue
+// @grant       GM_getValue
 // @license      GPL-3.0 License
 // ==/UserScript==
 
 /*
 日志：
+    20230124：适配nas-tools 2.8.0版本，下次更新保留ip地址和token到浏览器存储避免更新后重新填写。
     20221124：适配nas-tools 2.5.0版本。
     20221029：适配nas-tools 2.3.0版本。
     20220924：适配nas-tools 2.1.2版本。修复一些Bug
@@ -21,23 +23,37 @@
 */
 
 // 设置nas-tools的访问地址，如http://192.168.1.2:300
-let nastoolurl = "http://192.168.1.204:300";
+let nastoolurl = "http://192.168.1.204:xxx";
 // 获取nas-tools的安全密钥，基础设置-安全-API密钥
-var token = "IMCIrXB69GQUlxxxxx";
-// 如果油猴插件是测试版(可获取更多cookie)，请填写BETA，否则默认即可
-var tampermonkeyVersion = "BE__";
-// 自定义配置：解析rss，日常观影，不通知，ua（可用自己的或置空）,Y 浏览器仿真，N 不用代理服务器
-// var my_site_note = "Y|1000|N|Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/535.36 (KHTML, like Gecko) Chrome/104.0.0.0 Safari/535.36;|Y|N";
-var my_site_note = {"rule":"1000","parse":"N","ua":"","chrome":"Y","proxy":"N","message":"Y","subtitle":"Y"};
+var token = "IMCIrXB69GQUlHD9xxx";
+// 如果油猴插件是测试版(可获取更多cookie)，保持不变，否则改为"BET"
+var tampermonkeyVersion = "BETA";
+// 自定义配置：日常观影，下载设置默认（若预设则填写-1），解析rss，ua, 浏览器仿真，N 不用代理服务器，消息通知，字幕下载
+var my_site_note = {"rule":"1000","download_setting":"", "parse":"Y","ua":navigator.userAgent,"chrome":"Y","proxy":"N","message":"Y","subtitle":"Y"};
 // 自定义配置：默认优先级为"2"
 var my_site_pri = "2"
-// 自定义配置：签到Q、订阅D(未设置rss链接时无法订阅)、刷流S，默认不刷流、统计T
-var my_site_include = "QDT"
+// 自定义配置：签到Q、订阅D(未设置rss链接时无法订阅)、刷流S（未设置rss无法刷流）、统计T
+var my_site_include = "QDST"
 // 下面这些不用修改
 var userSitesApi = "/api/v1/site/sites"
 var siteJson;
 var dorandom = "/do?random=0.19956351081249935";
 // this.$$ = this.jQuery;
+if (nastoolurl != "http://192.168.1.204:xxx"){
+    GM_setValue("nastoolurl", nastoolurl);
+    console.log("【DEBUG】当前nastools地址：" + nastoolurl);
+}else{
+    nastoolurl = GM_getValue("nastoolurl");
+    console.log("【DEBUG】当前nastools地址：" + nastoolurl);
+}
+
+if (token != "IMCIrXB69GQUlHD9xxx"){
+	GM_setValue("token", token);
+	console.log("【DEBUG】当前token:" + token);
+}else{
+    token = GM_getValue("token");
+    console.log("【DEBUG】当前token:" + token);
+}
 
 (function () {
     'use strict';
@@ -98,8 +114,8 @@ async function getData() {
     console.log("【Debug】开始获取PT站点信息");
     var data = {};
     var ptCookie = document.cookie;
-    if (tampermonkeyVersion == "BETA") { 
-        GM_cookie('list', { // 异步,如果在return data之前还没执行完，部分站点会导致cookie不全。导致第一次加入站点时可能会缺
+    if (tampermonkeyVersion == "BETA") {
+        GM_cookie('list', { // 异步,如果在return data之前还没执行完，部分站点会导致cookie不全。
             url: location.href
         }, (cookies) => {
             ptCookie = cookies.map(c => `${c.name}=${c.value}`).join('; ');
@@ -155,10 +171,11 @@ async function getData() {
             data.site_note.rule = temp.rule;
             data.site_note.parse = temp.parse;
             data.site_note.ua = temp.ua;
-            data.site_note.chrome = temp.chrome;
-            data.site_note.proxy = temp.proxy;
-            data.site_note.message = temp.unread_msg_notify;
-            data.site_note.subtitle = temp.subtitle.
+            temp.chrome == true ? data.site_note.chrome = "Y" :data.site_note.chrome = "N";
+            temp.proxy == true ? data.site_note.proxy = "Y" :data.site_note.proxy = "N";
+            temp.message == true ? data.site_note.message = "Y" :data.site_note.message = "N";
+            temp.subtitle == true ? data.site_note.subtitle = "Y" :data.site_note.subtitle = "N"
+			data.site_note.download_setting = temp.download_setting
             break;
         }
     }
