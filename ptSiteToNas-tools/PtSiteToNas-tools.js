@@ -5,7 +5,7 @@
 // @namespace    http://tampermonkey.net/
 
 // @match   https://xxx/index.php
-// @version     3.0.0
+// @version     3.2.3
 // @grant       GM_xmlhttpRequest
 // @grant       GM_cookie
 // @grant       GM_setValue
@@ -15,6 +15,7 @@
 
 /*
 日志：
+    20230531：适配nas-tools 3.2.3版本，适配添加全新站点API。
     20230301：适配nas-tools 3.0.0版本，使用新API更新站点Cookie。
     20230124：适配nas-tools 2.8.0版本，下次更新保留ip地址和token到浏览器存储避免更新后重新填写。
     20221124：适配nas-tools 2.5.0版本。
@@ -39,7 +40,10 @@ var my_site_note = {
     "chrome": "Y",
     "proxy": "N",
     "message": "Y",
-    "subtitle": "Y"
+    "subtitle": "Y",
+    "limit_interval":"",
+    "limit_count":"",
+    "limit_seconds":""
 };
 // 自定义配置：默认优先级为"2"
 var my_site_pri = "2"
@@ -94,17 +98,20 @@ async function getUserSitesByApi(){
 }
 
 async function sendSiteToNastools(data) {
-    data = "cmd=update_site&data=" + encodeURIComponent(JSON.stringify(data)); // JSON.stringify 时候遇到rssurl中的&会自动分割，不能用encode
-    // console.log(data)
+    // data = "cmd=update_site&data=" + encodeURIComponent(JSON.stringify(data)); // JSON.stringify 时候遇到rssurl中的&会自动分割，不能用encode
     GM_xmlhttpRequest({
         method: "POST",
         url: nastoolurl + dorandom,
         headers : {
-            'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
+            'Content-Type': 'application/json',
+            // 'Content-Type': 'application/x-www-form-urlencoded; charset=UTF-8',
             'Origin': nastoolurl,
             'X-Requested-With': 'XMLHttpRequest',
         },
-        data: data,
+        data: JSON.stringify({
+            cmd: "update_site",
+            data: data
+        }),
         onload: function (response) {
                 console.log("【Debug】nas-tools请求发送成功");
                 if (JSON.parse(response.responseText).code !== true){ // code : true 为请求成功
